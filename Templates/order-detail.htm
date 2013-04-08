@@ -1,0 +1,30 @@
+<script id="order-detail" type="text/html">
+    <ul>
+        <li class="orderNumber" data-target="{{Order Number}}">
+           CUSTOM PAGE FOR THIS ORDER ONLY {{Order Number}}
+        </li>
+        <li>
+           {{Order Date}}
+        </li>
+        <li>
+            Sent To: <div class="name">{{customerData.Name}} </div>
+        </li>
+        <li>
+            Email: <a href="">{{customerData.Email}}</a>
+        </li>
+
+        <li>
+            <ul>
+                {{#itemData}}
+                <li class="name">
+                    {{Name}}
+                </li>
+                <li class="picture">
+                    Picture: {{Picture}}
+                </li>
+                {{/itemData}}
+            </ul>
+        </li>
+
+    </ul>
+</script>

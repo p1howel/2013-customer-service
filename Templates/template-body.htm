@@ -1,0 +1,32 @@
+<script id="template-body" type="text/html">
+    {{#orders}}
+    <ul>
+        <li class="orderNumber" data-target="{{Order Number}}">
+            {{Label - Order Number}}:  {{Order Number}}
+        </li>
+        <li>
+            {{Label - Date}}: {{Order Date}}
+        </li>
+        <li>
+            Sent To: <div class="name">{{customerData.Name}} </div>
+        </li>
+        <li>
+            Email: <a href="">{{customerData.Email}}</a>
+        </li>
+
+        <li>
+            <ul>
+                {{#itemData}} {{Label - Name}}:
+                <li class="name">
+                    {{Name}}
+                </li>
+                <li class="picture">
+                    Picture: {{Picture}}
+                </li>
+                {{/itemData}}
+            </ul>
+        </li>
+
+    </ul>
+    {{/orders}}
+</script>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+    <link href="css/styles.css" media="screen" rel="stylesheet" type="text/css" />
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <!--<script src="js/handlebars.js" type="text/javascript"></script>-->
+    <script src="js/jquery.mustache.js" type="text/javascript"></script>
+    <script src="js/mustache.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+
+        var orderData;
+        var customerData;
+        var itemData;
+        var allTemplateData;
+
+        function loadHandlersNav()
+        {
+
+        }
+
+        function loadHandlersMainBody()
+        {
+            $(".orderNumber").click(function () {
+                var self = $(this);
+                var target = self.data("target");
+                var identifiedOrder;
+                for (var i = 0; i < allTemplateData["orders"].length; i++)
+                {
+                    if (allTemplateData["orders"][i]["Order Number"] == target)
+                    {
+                        identifiedOrder = allTemplateData["orders"][i];
+                    }
+                }
+                $.Mustache.load('Templates/order-detail.htm', function () {
+                    console.log("HERE");
+                    $('#mainBody').html("");
+                    $('#mainBody').mustache('order-detail', identifiedOrder);
+                });
+
+                console.log(identifiedOrder);
+            });
+        }
+
+        function Refresh(id){
+            location.href="?language=" + id
+        }
+
+        function getURLParameter(name) {
+            return decodeURI(
+                    (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+            );
+        }
+
+        function getKeys(obj)
+        {
+                var keys = [];
+                for(var key in obj){
+                    keys.push(key);
+                }
+                return keys;
+        }
+
+
+        function processData(myData)
+        {
+            var templateData = { orders: myData };
+            console.log(JSON.stringify(myData));
+            for (var i = 0; i < myData.length; i++)
+            {
+                console.dir(myData[i]);
+            }
+        }
+
+
+        function getCustomerData(customerData, customerID)
+        {
+            for (var i = 0; i < customerData.length; i++)
+            {
+                if (customerID == customerData[i]["Customer ID"])
+                {
+                    return customerData[i];
+                }
+            }
+            return ;
+        }
+
+        function getItemData(itemData, itemIDList)
+        {
+            var itemsObj = [];
+            for (var i = 0; i < itemIDList.length; i++)
+            {
+                for (var j = 0; j < itemData.length; j++)
+                {
+                    if (itemIDList[i] == itemData[j]["Item ID"])
+                    {
+                        itemsObj.push(itemData[j]);
+                    }
+                }
+            }
+            return itemsObj;
+        }
+
+
+        function parseResponse(orderData, customerData, itemData, languageSpecificLabels)
+        {
+
+            for (var i = 0; i < orderData.length; i++)
+            {
+                var customerID = orderData[i]["Customer ID"];
+                var itemIDList = orderData[i]["IDs"].split(",");
+
+
+                if ($("select").val() == "portuguese")
+                {
+                    var date = orderData[i]["Order Date"].split("/");
+                    orderData[i]["Order Date"] = date[1] + "/" + date[0] + "/" + date[2];
+                }
+
+                var customerDataReturned = getCustomerData(customerData, customerID);
+                orderData[i]['customerData'] = customerDataReturned;
+
+
+                var itemDataReturned = getItemData(itemData, itemIDList);
+                orderData[i]['itemData'] = itemDataReturned;
+            }
+
+            var languageSpecificKeys = getKeys(languageSpecificLabels);
+            var allData = new Object();
+            allData.orders = orderData;
+            for (var i = 0; i < languageSpecificKeys.length; i++)
+            {
+                allData[languageSpecificKeys[i]] = languageSpecificLabels[languageSpecificKeys[i]];
+            }
+            return allData;
+
+        }
+
+        $(document).ready(function () {
+            /*
+             var source   = $("#entry-template").html();
+             var template = Handlebars.compile(source);
+             var context = {title: "My New Post", body: "This is my first post!"}
+             var html    = template(context);
+             $("#insert").html(html);
+             */
+            // Load a single template.
+
+            var languageSpecificLabels;
+            if (getURLParameter("language") == 'portuguese') {
+                $("select").val("portuguese");
+                $.ajax({async:false, url:'JSON/language_files/portuguese.json', success:function (data) {
+                    languageSpecificLabels = data;
+                }});
+            }
+            else {
+                $("select").val("english");
+                $.ajax({async:false, url:'JSON/language_files/english.json', success:function (data) {
+                    languageSpecificLabels = data;
+                }});
+            }
+
+            orderData = {};
+
+            $.ajax({async:false, url:'JSON/orders.json', success:function (data) {
+                orderData = data;
+            }});
+
+            customerData = {};
+            $.ajax({async:false, url:'JSON/customers.json', success:function (data) {
+                customerData = data;
+            }});
+
+            itemData = {};
+            $.ajax({async:false, url:'JSON/items.json', success:function (data) {
+                itemData = data;
+            }});
+
+            allTemplateData = parseResponse(orderData, customerData, itemData, languageSpecificLabels);
+
+            $.Mustache.load('Templates/template-body.htm', function () {
+                $('#mainBody').mustache('template-body', allTemplateData);
+                loadHandlersMainBody();
+            });
+
+            var headerData =
+            {header:"Customer Service Prototype"};
+
+            $.Mustache.load('Templates/template-head.htm', function () {
+                $('#header').mustache('template-head', headerData);
+            });
+
+            var navData = { List:[
+                {ListItem:"Navigation Link A"},
+                {ListItem:"Navigation Link B"},
+                {ListItem:"Navigation Link C"}
+            ]};
+
+            $.Mustache.load('Templates/template-nav.htm', function () {
+                $('#leftNav').mustache('template-nav', navData);
+                loadHandlersNav();
+            });
+
+
+        });
+    </script>
+
+</head>
+<body>
+    <h2 id="header"><p>welcome</p></h2>
+    <div id="leftNav">
+
+    </div>
+    <div id="mainBody">
+        <select name="language" onchange="Refresh(this.value)">
+            <option value="english">English</option>
+            <option value="portuguese">Portuguese</option>
+        </select>
+    </div>
+</body>
+</html>
